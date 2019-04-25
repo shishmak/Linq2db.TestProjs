@@ -1,0 +1,174 @@
+--test data: 10k devices, 800k readings. 
+--generate test data script at the end of this file 
+--model in file model.cs
+
+begin;
+
+explain (analyze) 
+update
+	billing."TempReading"
+set
+	"devid" = subq.devid,
+	"Devtypeid" = subq.devtypeid
+from
+	(
+	select
+		d.devid,
+		d.sernum,
+		d.devtypeid,
+		dt."GlobalType"
+	from
+		billing.devices d
+	inner join billing.devtypes dt on
+		d.devtypeid = dt.devtypeid 
+) as subq
+where
+	billing."TempReading"."DevSerNum" = subq.sernum
+	and billing."TempReading"."DevGlobalType" = subq."GlobalType"
+;
+
+--select * from "TempReading"
+
+rollback;
+end;
+
+--Update on "TempReading"  (cost=552.25..100426.11 rows=705543 width=100) (actual time=10974.226..10974.226 rows=0 loops=1)
+--  ->  Hash Join  (cost=552.25..100426.11 rows=705543 width=100) (actual time=203.187..1373.128 rows=765525 loops=1)
+--        Hash Cond: ((("TempReading"."DevSerNum")::text = (d.sernum)::text) AND ("TempReading"."DevGlobalType" = dt."GlobalType"))
+--        ->  Seq Scan on "TempReading"  (cost=0.00..76700.96 rows=2148996 width=47) (actual time=195.283..953.751 rows=765525 loops=1)
+--        ->  Hash  (cost=399.14..399.14 rows=10207 width=65) (actual time=7.809..7.809 rows=10207 loops=1)
+--              Buckets: 16384  Batches: 1  Memory Usage: 1125kB
+--              ->  Hash Join  (cost=50.73..399.14 rows=10207 width=65) (actual time=0.140..4.693 rows=10207 loops=1)
+--                    Hash Cond: (d.devtypeid = dt.devtypeid)
+--                    ->  Seq Scan on devices d  (cost=0.00..208.07 rows=10207 width=55) (actual time=0.027..2.383 rows=10207 loops=1)
+--                    ->  Hash  (cost=28.10..28.10 rows=1810 width=14) (actual time=0.105..0.105 rows=19 loops=1)
+--                          Buckets: 2048  Batches: 1  Memory Usage: 17kB
+--                          ->  Seq Scan on devtypes dt  (cost=0.00..28.10 rows=1810 width=14) (actual time=0.098..0.100 rows=19 loops=1)
+--Planning time: 16.439 ms
+--Execution time: 10974.457 ms
+
+begin;
+
+explain (analyze) 
+update
+    billing."TempReading"
+set
+    devid = (
+    select
+        s_1.devid
+    from
+        (
+        select
+            t1.devtypeid,
+            t1.sernum,
+            t1.devid
+        from
+            billing.devices t1 ) s_1
+    inner join (
+            select
+                t2.devtypeid,
+                t2."GlobalType"
+            from
+                billing.devtypes t2 ) dt_1  on
+        s_1.devtypeid = dt_1.devtypeid
+    where
+        s_1.sernum = billing."TempReading"."DevSerNum"
+        and dt_1."GlobalType" = billing."TempReading"."DevGlobalType"
+    limit 1 ),
+    "Devtypeid" = (
+    select
+        dt_2.devtypeid
+    from
+        (
+        select
+            t4.devtypeid,
+            t4.sernum
+        from
+            billing.devices t4 ) s_2
+    inner join (
+            select
+                t5.devtypeid,
+                t5."GlobalType"
+            from
+                billing.devtypes t5 ) dt_2  on
+        s_2.devtypeid = dt_2.devtypeid
+    where
+        s_2.sernum = billing."TempReading"."DevSerNum"
+        and dt_2."GlobalType" = billing."TempReading"."DevGlobalType"
+    limit 1 );
+    
+select * from "TempReading";
+
+rollback;
+end;
+
+--Update on "TempReading"  (cost=0.00..1039221086.25 rows=2149035 width=83) (actual time=1016876.800..1016876.800 rows=0 loops=1)
+--  ->  Seq Scan on "TempReading"  (cost=0.00..1039221086.25 rows=2149035 width=83) (actual time=3.646..1006975.073 rows=765525 loops=1)
+--        SubPlan 1
+--          ->  Limit  (cost=0.15..241.77 rows=1 width=37) (actual time=0.656..0.656 rows=1 loops=765525)
+--                ->  Nested Loop  (cost=0.15..241.77 rows=1 width=37) (actual time=0.655..0.655 rows=1 loops=765525)
+--                      ->  Seq Scan on devices t1  (cost=0.00..233.59 rows=1 width=41) (actual time=0.640..0.640 rows=1 loops=765525)
+--                            Filter: ((sernum)::text = ("TempReading"."DevSerNum")::text)
+--                            Rows Removed by Filter: 5103
+--                      ->  Index Scan using "PK_devtypes" on devtypes t2  (cost=0.15..8.17 rows=1 width=4) (actual time=0.003..0.003 rows=1 loops=765525)
+--                            Index Cond: (devtypeid = t1.devtypeid)
+--                            Filter: ("GlobalType" = "TempReading"."DevGlobalType")
+--        SubPlan 2
+--          ->  Limit  (cost=0.15..241.77 rows=1 width=4) (actual time=0.655..0.655 rows=1 loops=765525)
+--                ->  Nested Loop  (cost=0.15..241.77 rows=1 width=4) (actual time=0.654..0.654 rows=1 loops=765525)
+--                      ->  Seq Scan on devices t4  (cost=0.00..233.59 rows=1 width=4) (actual time=0.639..0.639 rows=1 loops=765525)
+--                            Filter: ((sernum)::text = ("TempReading"."DevSerNum")::text)
+--                            Rows Removed by Filter: 5103
+--                      ->  Index Scan using "PK_devtypes" on devtypes t5  (cost=0.15..8.17 rows=1 width=4) (actual time=0.003..0.003 rows=1 loops=765525)
+--                            Index Cond: (devtypeid = t4.devtypeid)
+--                            Filter: ("GlobalType" = "TempReading"."DevGlobalType")
+--Planning time: 0.494 ms
+--Execution time: 1016876.907 ms
+
+
+--generate test data:
+
+--CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+--commit;
+--SET work_mem TO '200MB';
+
+--CREATE OR REPLACE FUNCTION random_between(low INT ,high INT) 
+--   RETURNS INT AS
+--$$
+--BEGIN
+--   RETURN floor(random()* (high-low + 1) + low);
+--END;
+--$$ language 'plpgsql' STRICT;
+--
+--begin;
+--
+--	TRUNCATE TABLE ONLY devtypes, "DevReadingType", devices, "TempReading" RESTART IDENTITY cascade; 
+--	
+--	insert into devtypes(devtypeid, typename, "GlobalType")
+--	select generate_series, 'type_' || generate_series %10 || ':' || generate_series /10  , generate_series / 10 from generate_series(11,29);
+--
+--	select * from devtypes;
+--
+--	INSERT INTO billing."DevReadingType" ("DevTypeId", "Name", "Responsibility")
+--	select dt.devtypeid, 'r_' || gs.ser::text, gs.ser from (select generate_series as ser from generate_series(1,5)) as gs
+--	join devtypes as dt
+--	on 1 = 1
+--	order by devtypeid;
+--
+--	select * from "DevReadingType";
+--	
+--	INSERT INTO billing.devices	(devid, sernum, devtypeid)
+--	select uuid_generate_v4()::text as devid,( generate_series(1, random_between(400,600)) + generate_series*100000)::text as sernum, generate_series as devtypeid 
+--	from generate_series(11,29);
+--
+--	select count(*) from devices;
+--
+--	INSERT INTO billing."TempReading" ("DevSerNum", devid, tsdevice, value, "Devtypeid", "DevReadingTypeId", "ReadingTypeName", "DevGlobalType", "Responsibility")
+--	select d.sernum, null, (generate_series || '-01-2018')::date, generate_series, null, null, rt."Name", dt."GlobalType", 0 from billing.devtypes as dt join billing.devices as d on d.devtypeid = dt.devtypeid join billing."DevReadingType" as rt on rt."DevTypeId" = dt.devtypeid
+--	join generate_series(1, 15) on 1 = 1;
+--	
+--	select * from "TempReading";
+--	--rollback;
+--	commit;
+--end;
+
