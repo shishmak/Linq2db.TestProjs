@@ -15,7 +15,7 @@ namespace TestLinq2Db
 {
     class Program
     {
-        private static BulkCopyOptions _bulkCopyOptions = new BulkCopyOptions { /*KeepIdentity = true ,*/ BulkCopyType = BulkCopyType.MultipleRows, MaxBatchSize = 10};
+        private static BulkCopyOptions _bulkCopyOptions = new BulkCopyOptions { KeepIdentity = true , BulkCopyType = BulkCopyType.MultipleRows, MaxBatchSize = 10};
 
         public static int Chanel(string DeviceNumber) => int.TryParse((DeviceNumber ?? "0")[0].ToString(), out int v) ? v : 0;
         public static int Chanel2(string DeviceNumber) => (int)(DeviceNumber == null || !char.IsDigit(DeviceNumber[0]) ? 0 : char.GetNumericValue(DeviceNumber[0]));
@@ -28,10 +28,14 @@ namespace TestLinq2Db
                 DataConnection.TurnTraceSwitchOn();
                 DataConnection.WriteTraceLine = (s, s1) => { Console.WriteLine(s); };
 
-                db.CreateTable<billing_Devtype>();
-                db.CreateTable<billing_Device>();
-                db.CreateTable<billing_DevReadingType>();
-                db.CreateTable<billing_TempReading>();
+                try
+                {
+                    db.CreateTable<billing_Devtype>();
+                    db.CreateTable<billing_Device>();
+                    db.CreateTable<billing_DevReadingType>();
+                    db.CreateTable<billing_TempReading>();
+                }
+                catch { }
 
                 #region Source is table (correct build)
                 db.TempReadings
@@ -245,14 +249,49 @@ set
             {
                 try
                 {
-                    db.CreateTable<billing_Devtype>();
-                    db.CreateTable<billing_Device>();
-                    db.CreateTable<billing_DevReadingType>();
-                    db.CreateTable<billing_TempReading>();
-                }catch { }
+                    //db.CreateTable<billing_Devtype>();
+                    //db.CreateTable<billing_Device>();
+                    //db.CreateTable<billing_DevReadingType>();
+                    //db.CreateTable<billing_TempReading>();
+                    //db.CreateTable<billing_TestEntity>();
+                    db.CreateTable<billing_TestBaseEntity>();
+                    db.CreateTable<billing_TestChEntity>();
+                } catch { }
 
                 DataConnection.TurnTraceSwitchOn();
                 DataConnection.WriteTraceLine = (s, s1) => { Console.WriteLine(s); };
+
+                var pe = new billing_TestBaseEntity[] {
+                    new billing_TestBaseEntity { Id = Guid.NewGuid(), Name = "T1" },
+                    new billing_TestBaseEntity { Id = Guid.NewGuid(), Name = "T2" },
+                    new billing_TestBaseEntity { Id = Guid.NewGuid(), Name = "T3" },
+                };
+                db.BulkCopy(_bulkCopyOptions, pe);
+                var ce = new billing_TestChEntity[] {
+                    new billing_TestChEntity { Id = Guid.NewGuid(), BaseId = pe[0].Id, Name = "ToT1" },
+                    new billing_TestChEntity { Id = Guid.NewGuid(), BaseId = pe[1].Id, Name = "ToT2" },
+                };
+                db.BulkCopy(_bulkCopyOptions,  ce );
+
+                var group = db.TestBaseTable.GroupJoin(db.TestChTable, dt => dt.Id, d => d.BaseId, (dt, d) => new { dt, d });
+                var smany1 = group.SelectMany(sm => sm.d.DefaultIfEmpty(), (sm, d) => new { sm.dt, d } );
+                //var smany2 = db.Devtypes.GroupJoin(db.Devices, dt => dt.Devtypeid, d => d.Devtypeid, (dt, d) => new { dt, d}).SelectMany(sm => sm.d.DefaultIfEmpty(), (sm, d) => new { sm.dt, d });
+
+                //var g2 =
+                //    from b in db.TestBaseTable
+                //    from c in db.TestChTable.LeftJoin(l => l.BaseId == b.Id)
+                //    select new { b, c }; 
+                
+                var g2 =
+                     from b in db.Gw
+                     from c in db.GwSet.LeftJoin(l => l.GatewayId == b.Id)
+                     select new { b, c };
+
+                var g3 = db.Gw.SelectMany(b => db.GwSet.Where(l => l.GatewayId == b.Id).DefaultIfEmpty(), (b, c) => new { b, c });
+
+                var q1 = smany1.ToList();
+                //var q2 = g2.ToList();
+                var q3 = g3.ToList();
 
                 //Console.WriteLine(string.Join("\n", db.Homes.ToList()));
                 //
@@ -282,22 +321,32 @@ set
                 //db.BeginTransaction();
 
                 //
-                db.Devtypes.Insert(() => new billing_Devtype { Typename = "TestType1", GlobalType = 1 });
-                db.Devtypes.Insert(() => new billing_Devtype { Typename = "TestType2", GlobalType = 1 });
-                db.Devtypes.Insert(() => new billing_Devtype { Typename = "TestType3", GlobalType = 1 });
-                db.Devtypes.Insert(() => new billing_Devtype { Typename = "TestType4", GlobalType = 1 });
+                //db.Devtypes.Insert(() => new billing_Devtype { Typename = "TestType1", GlobalType = 1 });
+                //db.Devtypes.Insert(() => new billing_Devtype { Typename = "TestType2", GlobalType = 1 });
+                //db.Devtypes.Insert(() => new billing_Devtype { Typename = "TestType3", GlobalType = 1 });
+                //db.Devtypes.Insert(() => new billing_Devtype { Typename = "TestType4", GlobalType = 1 });
+                //try
+                //{
+                //    db.BulkCopy(_bulkCopyOptions, new billing_TestEntity[] { new billing_TestEntity { Id = Guid.NewGuid(), Name = "T1" } });
+                //    db.Insert(new billing_TestEntity { Id = Guid.NewGuid(), Name = "T1" });
+                //}
+                //catch (Exception e)
+                //{
+                //    Console.WriteLine(e.Message);
+                //}
+
                 //
-                var o3 =4;
-                
-                var rnd = new Random();
-                var range = Enumerable.Range(0, 500000).Select(s => new billing_Device
-                {
-                    Devid = Guid.NewGuid(),
-                    Sernum = "Test01",
-                    Devtypeid = rnd.Next(1, o3) * 2 - 1
-                });
-                
-                db.BulkCopy(_bulkCopyOptions, range);
+                //var o3 =4;
+                //
+                //var rnd = new Random();
+                //var range = Enumerable.Range(0, 500000).Select(s => new billing_Device
+                //{
+                //    Devid = Guid.NewGuid(),
+                //    Sernum = "Test01",
+                //    Devtypeid = rnd.Next(1, o3) * 2 - 1
+                //});
+                //
+                //db.BulkCopy(_bulkCopyOptions, range);
                 //
                 //var group = db.Devtypes.GroupJoin(db.Devices, dt => dt.Devtypeid, d => d.Devtypeid, (dt, d) => new { dt, d = d.DefaultIfEmpty() });
                 //var smany1 = group.SelectMany(sm => sm.d.Select(d => new { sm.dt, d }));
@@ -369,7 +418,7 @@ set
 
         static void Main(string[] args)
         {
-            //test1();
+            //Test1();
 
             Test2();
 

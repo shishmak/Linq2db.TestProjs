@@ -43,7 +43,7 @@ namespace DataModels
 		public ITable<billing_DevPropType>          DevPropTypes          { get { return this.GetTable<billing_DevPropType>(); } }
 		public ITable<billing_Devreading>           Devreadings           { get { return this.GetTable<billing_Devreading>(); } }
 		public ITable<billing_DevReadingType>       DevReadingTypes       { get { return this.GetTable<billing_DevReadingType>(); } }
-		public ITable<billing_Devstatu>             Devstatus             { get { return this.GetTable<billing_Devstatu>(); } }
+		public ITable<billing_Devstatus>            Devstatus             { get { return this.GetTable<billing_Devstatus>(); } }
 		public ITable<billing_Devtype>              Devtypes              { get { return this.GetTable<billing_Devtype>(); } }
 		public ITable<billing_Error>                Errors                { get { return this.GetTable<billing_Error>(); } }
 		public ITable<billing_Group>                Groups                { get { return this.GetTable<billing_Group>(); } }
@@ -1647,7 +1647,7 @@ namespace DataModels
 		/// fk_devices_devstatusid_devstatus_statusid
 		/// </summary>
 		[Association(ThisKey="Devstatusid", OtherKey="Statusid", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="fk_devices_devstatusid_devstatus_statusid", BackReferenceName="Fkdevicesdevstatusidstatusids")]
-		public billing_Devstatu Devstatu { get; set; }
+		public billing_Devstatus Devstatu { get; set; }
 
 		/// <summary>
 		/// fk_devices_devtypeid_devtypes_devtypeid
@@ -1797,7 +1797,7 @@ namespace DataModels
 	}
 
 	[Table(Schema="billing", Name="devstatus")]
-	public partial class billing_Devstatu
+	public partial class billing_Devstatus
 	{
 		[Column("statusid"),   PrimaryKey,  NotNull] public int    Statusid   { get; set; } // integer
 		[Column("statusname"),    Nullable         ] public string Statusname { get; set; } // character varying(255)
@@ -25841,7 +25841,7 @@ namespace DataModels
 				t.Id == Id);
 		}
 
-		public static billing_Devstatu Find(this ITable<billing_Devstatu> table, int Statusid)
+		public static billing_Devstatus Find(this ITable<billing_Devstatus> table, int Statusid)
 		{
 			return table.FirstOrDefault(t =>
 				t.Statusid == Statusid);

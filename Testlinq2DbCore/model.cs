@@ -17,10 +17,6 @@ namespace TestLinq2Db
         public ITable<billing_DevReadingType> DevReadingTypes { get { return this.GetTable<billing_DevReadingType>(); } }
         public ITable<billing_TempReading> TempReadings { get { return this.GetTable<billing_TempReading>(); } }
         public ITable<billing_TestEntity> TestTable { get { return this.GetTable<billing_TestEntity>(); } }
-        public ITable<billing_TestBaseEntity> TestBaseTable { get { return this.GetTable<billing_TestBaseEntity>(); } }
-        public ITable<billing_TestChEntity> TestChTable { get { return this.GetTable<billing_TestChEntity>(); } }
-        public ITable<DAL_Gateway> Gw { get { return this.GetTable<DAL_Gateway>(); } }
-        public ITable<DAL_GatewaySettings> GwSet { get { return this.GetTable<DAL_GatewaySettings>(); } }
 
         public ExDbModel()
         {
@@ -30,6 +26,13 @@ namespace TestLinq2Db
 
         public ExDbModel(string configuration)
             : base(configuration)
+        {
+            InitDataContext();
+            InitMappingSchema();
+        }
+
+        public ExDbModel(string provider, string connection)
+            : base(provider, connection)
         {
             InitDataContext();
             InitMappingSchema();
@@ -188,110 +191,19 @@ namespace TestLinq2Db
         #endregion
     }
 
+
+
     //[Table(Schema = "dbo", Name = "TempReading")]
     [Table(Schema = "billing", Name = "TestTable")]
-    public partial class billing_TestEntity
+    public partial class billing_TestEntity : BEntity
     {
-        [Column("id"), PrimaryKey] public Guid Id { get; set; } 
+       
 
         [Column(), NotNull] public string Name { get; set; } // text
     }
 
-
-    public class BE {
-        [Column("Id"), PrimaryKey, Identity] public Guid Id { get; set; }
-    }
-
-    //[Table(Schema = "dbo", Name = "TempReading")]
-    [Table(Schema = "billing", Name = "TestBase")]
-    public partial class billing_TestBaseEntity : BE
+    public class BEntity
     {
-        [Column(), NotNull] public string Name { get; set; } // text
-
-        #region Associations
-        /// <summary>
-        /// fk_devices_devtypeid_devtypes_devtypeid_BackReference
-        /// </summary>
-        [Association(ThisKey = "BaseId", OtherKey = "BaseId", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
-        public IEnumerable<billing_TestChEntity> chs { get; set; }
-        #endregion
+        [Column("id"), PrimaryKey, Identity] public Guid Id { get; set; }
     }
-
-
-    //[Table(Schema = "dbo", Name = "TempReading")]
-    [Table(Schema = "billing", Name = "TestCh")]
-    public partial class billing_TestChEntity : BE
-    {
-        [Column()] public Guid BaseId { get; set; }
-
-        [Column(), NotNull] public string Name { get; set; } // text
-
-        #region Associations
-        /// <summary>
-        /// fk_devices_devtypeid_devtypes_devtypeid
-        /// </summary>
-        [Association(ThisKey = "BaseId", OtherKey = "BaseId", CanBeNull = false, Relationship = Relationship.ManyToOne, KeyName = "fk_tobase", BackReferenceName = "chs")]
-        public billing_TestBaseEntity Base { get; set; }
-        #endregion 
-    }
-
-    internal enum EntryStates
-    {
-        Unknown,
-        Insert,
-        Update,
-        Nothing
-    }
-
-    public interface IEntity
-    {
-        Guid Id { get; set; }
-    }
-
-    public class BEntity : IEntity
-    {
-
-        public Guid Id { get; set; }
-
-        internal EntryStates State { get; set; }
-    }
-
-    public class DAL_Gateway : BEntity
-    {
-        public Guid Id { get; set; }
-
-        
-        public DAL_Gateway()        
-        {          
-            GatewaySets = new HashSet<DAL_GatewaySettings>();           
-        }
-
-        public long SerialNum { get; set; }
-
-        public string User { get; set; }
-        public string Password { get; set; }
-
-        public IEnumerable<DAL_GatewaySettings> GatewaySets { get; set; }
-    }
-
-    public class BSettingsEntry : BEntity
-    {
-        //[Column(Order = 1)]
-        public Guid GatewayId { get; set; }
-        //[ForeignKey("GatewayId")]
-        public DAL_Gateway Gateway { get; set; }
-    }
-
-    public class DAL_GatewaySettings : BSettingsEntry
-    {
-        public long NodeID { get; set; }
-        public long SerialNum { get; set; }
-        public byte Number { get; set; }
-        public byte Priority { get; set; }
-        public long NetworkTimeout { get; set; }
-        public string NTPServer1 { get; set; }
-        public string NTPServer2 { get; set; }
-        public int TimeZone { get; set; }
-    }
-
 }

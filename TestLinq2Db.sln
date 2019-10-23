@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.271
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29326.143
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestLinq2Db", "TestLinq2Db\TestLinq2Db.csproj", "{A8B00B0F-4A6B-4600-BDCB-D2C342F84947}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testlinq2DbCore", "Testlinq2DbCore\Testlinq2DbCore.csproj", "{57D515B6-F04D-40E8-87CC-BACD7A9AC4C5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestLinq2DbAspCore", "TestLinq2DbAspCore\TestLinq2DbAspCore.csproj", "{9F1A8C35-BC25-48CF-B773-58D0D249685E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{A8B00B0F-4A6B-4600-BDCB-D2C342F84947}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8B00B0F-4A6B-4600-BDCB-D2C342F84947}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8B00B0F-4A6B-4600-BDCB-D2C342F84947}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57D515B6-F04D-40E8-87CC-BACD7A9AC4C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57D515B6-F04D-40E8-87CC-BACD7A9AC4C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57D515B6-F04D-40E8-87CC-BACD7A9AC4C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57D515B6-F04D-40E8-87CC-BACD7A9AC4C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F1A8C35-BC25-48CF-B773-58D0D249685E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F1A8C35-BC25-48CF-B773-58D0D249685E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F1A8C35-BC25-48CF-B773-58D0D249685E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F1A8C35-BC25-48CF-B773-58D0D249685E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
